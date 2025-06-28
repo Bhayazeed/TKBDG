@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Sales Graph Visualization</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="https://popoto.github.io/popoto-js/favicon.ico"/>
+
+    <!-- Fonts and Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Popoto.js CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/popoto/dist/popoto.min.css">
+
+    <style>
+        /* Custom styles to integrate with Popoto.js and Tailwind CSS */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* slate-100 */
+        }
+
+        /* Overriding Popoto's default styles for a more modern look */
+        .ppt-taxo-nav {
+            background-color: #ffffff;
+            border-color: #e2e8f0; /* slate-200 */
+            border-radius: 0.5rem;
+        }
+
+        .ppt-taxo__button {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .ppt-taxo__button:hover {
+            background-color: #f1f5f9; /* slate-100 */
+        }
+
+        .ppt-taxo__span-icon {
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            font-size: 1rem;
+            width: 2rem;
+            height: 2rem;
+            line-height: 2rem;
+        }
+
+        /* Node Icon Styling */
+        .ppt-taxo__span-icon.Merek:before { content: "\f02b"; color: #3b82f6; } /* fa-tag */
+        .ppt-taxo__span-icon.Mobil:before { content: "\f1b9"; color: #10b981; } /* fa-car */
+        .ppt-taxo__span-icon.Model:before { content: "\f1de"; color: #8b5cf6; } /* fa-sliders */
+        .ppt-taxo__span-icon.Pelanggan:before { content: "\f007"; color: #f97316; } /* fa-user */
+        .ppt-taxo__span-icon.Penjualan:before { content: "\f53a"; color: #ef4444; } /* fa-receipt */
+        .ppt-taxo__span-icon.Sales:before { content: "\f0b1"; color: #14b8a6; } /* fa-briefcase */
+
+        /* Link styling based on value */
+        .ppt-link__path {
+            stroke-opacity: 0.4;
+        }
+        .ppt-link__text--value {
+            fill: #1e293b; /* slate-800 */
+            font-weight: 600;
+        }
+        .very-thin { stroke: #dbeafe; stroke-width: 2px; } /* blue-100 */
+        .thin { stroke: #93c5fd; stroke-width: 4px; }      /* blue-300 */
+        .medium { stroke: #3b82f6; stroke-width: 6px; }    /* blue-500 */
+        .thick { stroke: #1d4ed8; stroke-width: 8px; }     /* blue-700 */
+        .very-thick { stroke: #1e3a8a; stroke-width: 10px; }/* blue-900 */
+
+    </style>
+</head>
+
+<body class="ppt-body text-slate-800">
+
+    <section class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <!-- Header -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h1 class="text-3xl font-bold text-slate-900">Car Sales Graph Explorer</h1>
+            <p class="text-slate-500 mt-1">Use the graph below to visually explore the relationships in the car sales database.</p>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Left Panel: Taxonomy and Cypher -->
+            <div class="lg:col-span-1 flex flex-col gap-6">
+                <!-- Taxonomy/Filter Panel -->
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <h2 class="text-xl font-semibold mb-3 text-slate-800 border-b pb-2">Filter by Category</h2>
+                    <nav id="popoto-taxonomy" class="ppt-taxo-nav !border-0 !rounded-none !bg-transparent">
+                        <!-- Popoto.js generates taxonomy filter here -->
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Right Panel: Graph and Results -->
+            <div class="lg:col-span-2 flex flex-col gap-6">
+                <!-- Graph Panel -->
+                <div class="bg-white p-4 rounded-lg shadow-md h-96 lg:h-[32rem]">
+                    <div id="popoto-graph" class="ppt-div-graph w-full h-full">
+                        <!-- Popoto.js generates the graph here -->
+                    </div>
+                </div>
+
+                <!-- Results Panel -->
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <div class="flex items-center border-b pb-2 mb-3">
+                        <h2 class="text-xl font-semibold text-slate-800">Results</h2>
+                        <span id="result-total-count" class="ml-2 text-slate-500 font-medium"></span>
+                    </div>
+                    <div id="popoto-results" class="ppt-container-results">
+                        <!-- Popoto.js generates results here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="text-center mt-8 text-slate-500 text-sm">
+            <p>Powered by Popoto.js and Neo4j. Styled with Tailwind CSS.</p>
+        </footer>
+
+    </section>
+
+    <!-- Error Modal -->
+    <div id="error-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
+            <div class="flex items-start">
+                <div class="flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-full bg-red-100">
+                    <i class="fas fa-exclamation-triangle text-2xl text-red-600"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-xl font-semibold text-slate-900">Connection Error</h3>
+                    <p class="mt-2 text-slate-600">Could not connect to the Neo4j database. Please ensure the database is running and the connection details are correct.</p>
+                    <pre id="error-content" class="mt-4 bg-slate-100 p-3 rounded-md text-xs text-red-800 overflow-x-auto"></pre>
+                </div>
+            </div>
+             <div class="mt-6 text-right">
+                <button onclick="document.getElementById('error-modal').style.display='none'" class="px-4 py-2 bg-slate-600 text-white rounded-md hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Required Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/neo4j-driver@5/lib/browser/neo4j-web.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popoto/dist/popoto.min.js"></script>
+
+    <script>
+        /**
+         * Establish connection to the Neo4j database.
+         * IMPORTANT: Replace these with your actual database credentials.
+         */
+        const driver = neo4j.driver(
+            "neo4j://localhost:7687", // Or your AuraDS URI
+            neo4j.auth.basic("neo4j", "12345678"), // Replace with your user/password
+            { disableLosslessIntegers: true }
+        );
+
+        // Assign the driver to Popoto.js
+        popoto.runner.DRIVER = driver;
+
+        /**
+         * Define the data model for Popoto.js.
+         * This configuration tells Popoto how to handle each node label from the database.
+         */
+        popoto.provider.node.Provider = {
+            "Merek": {
+                returnAttributes: ["nama", "merek_id","negara_asal"],
+                constraintAttribute: "merek_id",
+                "getDisplayType": function (node) {
+                    return popoto.provider.node.DisplayTypes.IMAGE;
+            }
+            },
+            "Mobil": {
+                returnAttributes: ["mobil_id","warna", "nomor_polisi", "tahun", "harga_beli", "kilometer", "status"],
+                constraintAttribute: "mobil_id",
+                "getDisplayType": function (node) {
+                    return popoto.provider.node.DisplayTypes.IMAGE;
+            }
+            },
+            "Model": {
+                returnAttributes: ["nama","namaMobil","model_id"],
+                constraintAttribute: "model_id",
+                "getDisplayType": function (node) {
+                    return popoto.provider.node.DisplayTypes.IMAGE;
+            }
+            },
+            "Pelanggan": {
+                returnAttributes: ["pelanggan_id","nama", "kota_asal"],
+                constraintAttribute: "pelanggan_id",
+                "getDisplayType": function (node) {
+                    return popoto.provider.node.DisplayTypes.IMAGE;
+            }
+            },
+            "Penjualan": {
+                returnAttributes: ["transaksi_id","tanggal_jual", "harga_jual"],
+                constraintAttribute: "transaksi_id",
+                "getDisplayType": function (node) {
+                    return popoto.provider.node.DisplayTypes.IMAGE;
+            }
+            },
+            "Sales": {
+                returnAttributes: ["sales_id","nama", "tanggal_bergabung"],
+                constraintAttribute: "sales_id",
+                "getDisplayType": function (node) {
+                    return popoto.provider.node.DisplayTypes.IMAGE;
+            }
+            },
+        };
+
+        /**
+         * Customize the CSS classes for taxonomy buttons for icon mapping.
+         */
+        popoto.provider.taxonomy.Provider = {
+            "getCSSClass": function (label, element) {
+                // Generates a CSS-friendly name from the label
+                const labelAsCSSName = label.replace(/[^0-9a-z\-_]/gi, '');
+                const cssClass = "ppt-taxo__" + element;
+                return cssClass + " " + labelAsCSSName;
+            }
+        };
+
+        /**
+         * Add a listener to update the total result count in the UI.
+         */
+        popoto.result.onTotalResultCount(function (count) {
+            const countEl = document.getElementById("result-total-count");
+            if (countEl) {
+                countEl.innerHTML = `(${count})`;
+            }
+        });
+
+        /**
+         * Verify connectivity to the database and start the application.
+         * If the connection fails, it displays a user-friendly error modal.
+         */
+        driver.verifyConnectivity()
+            .then(() => {
+                // Start Popoto with a default root node.
+                // "Pelanggan" (Customer) is a good starting point.
+                popoto.start("Sales");
+            })
+            .catch(error => {
+                console.error("Database connection error:", error);
+                document.getElementById("error-modal").style.display = "flex";
+                document.getElementById("error-content").innerText = error.message;
+            });
+
+    </script>
+</body>
+
+</html>
