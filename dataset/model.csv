@@ -1,0 +1,11 @@
+model_id,tipe,nama_model,merek_id
+MD001,SUV,Model-1,M001
+MD002,Truck,Model-2,M001
+MD003,Sedan,Model-3,M002
+MD004,Sedan,Model-4,M002
+MD005,Truck,Model-5,M003
+MD006,SUV,Model-6,M003
+MD007,Truck,Model-7,M004
+MD008,Truck,Model-8,M004
+MD009,Sedan,Model-9,M005
+MD010,Hatchback,Model-10,M005
